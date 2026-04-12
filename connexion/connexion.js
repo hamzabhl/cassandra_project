@@ -11,9 +11,9 @@ const client = new cassandra.Client({
 async function connectDB() {
     try {
         await client.connect();
-        console.log('✅ Connected to Cassandra');
+        console.log('Connected to Cassandra!');
     } catch (err) {
-        console.error('❌ Cassandra connection error:', err);
+        console.error('Cassandra connection error:', err);
     }
 }
 

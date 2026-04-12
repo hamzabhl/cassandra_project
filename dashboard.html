@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>KPI Dashboard</title>
@@ -31,7 +32,7 @@
             width: 200px;
             text-align: center;
             border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
         .card h2 {
@@ -43,117 +44,203 @@
             font-weight: bold;
         }
 
-        /* canvas {
-            margin-top: 50px;
-            max-width: 1000px;
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-        } */
         canvas {
             margin-top: 50px;
             width: 80% !important;
-            height: 400px !important; /* 🔥 increase this (500px, 600px...) */
+            height: 400px !important;
             display: block;
             margin-left: auto;
             margin-right: auto;
         }
+
+        .tables-container {
+            margin-top: 50px;
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .table-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            width: 300px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #f0f0f0;
+        }
     </style>
 </head>
+
 <body>
 
-<h1>📊 KPI Statistic Dashboard</h1>
+    <h1>KPI Statistic Dashboard</h1>
 
-<div class="container">
-    <div class="card">
-        <h2>Customers</h2>
-        <p id="customers">--</p>
+    <div class="container">
+        <div class="card">
+            <h2>Customers</h2>
+            <p id="customers">--</p>
+        </div>
+
+        <div class="card">
+            <h2>Organizations</h2>
+            <p id="organizations">--</p>
+        </div>
+
+        <div class="card">
+            <h2>Products</h2>
+            <p id="products">--</p>
+        </div>
     </div>
 
-    <div class="card">
-        <h2>Organizations</h2>
-        <p id="organizations">--</p>
+    <canvas id="kpiChart"></canvas>
+
+    <div class="tables-container">
+
+        <!-- Customers by Country -->
+        <div class="table-card">
+            <h2>Customers by Country</h2>
+            <table id="customersByCountry">
+                <thead>
+                    <tr>
+                        <th>Country</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <!-- Products by Category -->
+        <div class="table-card">
+            <h2>Products by Category</h2>
+            <table id="productsByCategory">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <!-- Organizations by Industry -->
+        <div class="table-card">
+            <h2>Organizations by Industry</h2>
+            <table id="organizationsByIndustry">
+                <thead>
+                    <tr>
+                        <th>Industry</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
     </div>
 
-    <div class="card">
-        <h2>Products</h2>
-        <p id="products">--</p>
-    </div>
-</div>
+    <script>
+        async function loadKPIs() {
+            try {
+                const res = await fetch('http://localhost:3000/totals');
+                const data = await res.json();
 
-<canvas id="kpiChart"></canvas>
+                document.getElementById('customers').innerText = data.total_customers;
+                document.getElementById('organizations').innerText = data.total_organizations;
+                document.getElementById('products').innerText = data.total_products;
 
-<!-- <script>
-    // ⚠️ For now we use MOCK data (until backend is ready)
-    const data = {
-        total_customers: 12000,
-        total_organizations: 3000,
-        total_products: 8000
-    };
+                const ctx = document.getElementById('kpiChart').getContext('2d');
 
-    // Fill cards
-    document.getElementById('customers').innerText = data.total_customers;
-    document.getElementById('organizations').innerText = data.total_organizations;
-    document.getElementById('products').innerText = data.total_products;
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Customers', 'Organizations', 'Products'],
+                        datasets: [{
+                            label: 'KPI Overview',
+                            data: [
+                                data.total_customers,
+                                data.total_organizations,
+                                data.total_products
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true
+                    }
+                });
 
-    // Chart
-    const ctx = document.getElementById('kpiChart').getContext('2d');
-
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['Customers', 'Organizations', 'Products'],
-            datasets: [{
-                label: 'KPI Overview',
-                data: [
-                    data.total_customers,
-                    data.total_organizations,
-                    data.total_products
-                ]
-            }]
+                loadTables();
+            } catch (err) {
+                console.error('Error loading KPIs:', err);
+            }
         }
-    });
-</script> -->
 
-<script>
-    async function loadKPIs() {
-        try {
-            const res = await fetch('http://localhost:3000/totals');
-            const data = await res.json();
+        async function loadTables() {
+            try {
+                const res = await fetch('http://localhost:3000/stats');
+                const data = await res.json();
 
-            // 🧠 Fill cards with real data
-            document.getElementById('customers').innerText = data.total_customers;
-            document.getElementById('organizations').innerText = data.total_organizations;
-            document.getElementById('products').innerText = data.total_products;
+                // Customers by Country
+                const custTable = document.querySelector('#customersByCountry tbody');
+                custTable.innerHTML = '';
+                data.customers_by_country.forEach(row => {
+                    custTable.innerHTML += `
+                <tr>
+                    <td>${row.country}</td>
+                    <td>${row.count}</td>
+                </tr>
+            `;
+                });
 
-            // 📊 Chart
-            const ctx = document.getElementById('kpiChart').getContext('2d');
+                // Products by Category
+                const prodTable = document.querySelector('#productsByCategory tbody');
+                prodTable.innerHTML = '';
+                data.products_by_category.forEach(row => {
+                    prodTable.innerHTML += `
+                <tr>
+                    <td>${row.category}</td>
+                    <td>${row.count}</td>
+                </tr>
+            `;
+                });
 
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['Customers', 'Organizations', 'Products'],
-                    datasets: [{
-                        label: 'KPI Overview',
-                        data: [
-                            data.total_customers,
-                            data.total_organizations,
-                            data.total_products
-                        ]
-                    }]
-                },
-                options: {
-                    responsive: true
-                }
-            });
+                // Organizations by Industry
+                const orgTable = document.querySelector('#organizationsByIndustry tbody');
+                orgTable.innerHTML = '';
+                data.organizations_by_industry.forEach(row => {
+                    orgTable.innerHTML += `
+                <tr>
+                    <td>${row.industry}</td>
+                    <td>${row.count}</td>
+                </tr>
+            `;
+                });
 
-        } catch (err) {
-            console.error('Error loading KPIs:', err);
+            } catch (err) {
+                console.error('Error loading tables:', err);
+            }
         }
-    }
 
-    // 🚀 Run on page load
-    loadKPIs();
-</script>
+        // 🚀 Run on page load
+        loadKPIs();
+    </script>
 </body>
+
 </html>
