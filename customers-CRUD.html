@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Customer Management</title>
+
+    <link rel="stylesheet" href="/node_modules/sweetalert2/dist/sweetalert2.min.css">
+    <script src="/node_modules/sweetalert2/dist/sweetalert2.min.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f5f7fa;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 260px;
+            background: #2c3e50;
+            color: white;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar h2 {
+            margin-bottom: 20px;
+        }
+
+        .sidebar button {
+            background: #3498db;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            transition: 0.2s;
+        }
+
+        .sidebar button:hover {
+            background: #2980b9;
+        }
+
+        /* MAIN CONTENT */
+        .content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        h1 {
+            margin-top: 0;
+        }
+
+        input {
+            padding: 12px;
+            margin: 10px 0;
+            width: 48%;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 18px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            color: white;
+            margin-top: 10px;
+        }
+
+        .create {
+            background: #27ae60;
+        }
+
+        .update {
+            background: #f39c12;
+        }
+
+        .delete {
+            background: #e74c3c;
+        }
+
+        .search {
+            background: #2980b9;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+        }
+
+        tr:hover {
+            background: #f1f1f1;
+        }
+
+        .action-btn {
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            color: white;
+            border: none;
+        }
+
+        .mini-update {
+            background: #f1c40f;
+        }
+
+        .mini-delete {
+            background: #e74c3c;
+        }
+
+        .nav-links {
+            display: flex;
+            flex-direction: column;
+            margin: 20px 0;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            transition: 0.2s;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .nav-links a:hover {
+            background: #3498db;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <h2>📋 Customers</h2>
+        <nav class="nav-links">
+            <a href="/customers-CRUD.html">Customers</a>
+            <a href="/products-CRUD.html">Products</a>
+            <a href="/organizations-CRUD.html">Organizations</a>
+        </nav>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="content">
+
+        <h1>Customer Management Dashboard</h1>
+
+        <!-- CREATE -->
+        <div class="card">
+            <h2>Add Customer</h2>
+            <div class="row">
+                <input id="first_name" type="text" placeholder="First Name">
+                <input id="country" type="text" placeholder="Country">
+            </div>
+            <button class="btn create" onclick="createCustomer()">Create Customer</button>
+        </div>
+
+        <!-- FIND -->
+        <div class="card">
+            <h2>Find Customer by ID</h2>
+            <input id="search-id" type="text" placeholder="Customer ID">
+            <button class="btn search" onclick="getCustomerById()">Search</button>
+
+            <div class="card">
+                <h3>Result</h3>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Country</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customer-result"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- SCRIPT -->
+    <script>
+        const API = "http://localhost:3000/customers";
+
+        // CREATE
+        async function createCustomer() {
+            const first_name = document.getElementById('first_name').value;
+            const country = document.getElementById('country').value;
+
+            const res = await fetch(API, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ first_name, country })
+            });
+
+            const data = await res.json();
+
+            Swal.fire({
+                icon: res.ok ? "success" : "error",
+                title: res.ok ? "Created!" : "Error",
+                text: res.ok ? `Customer_id : ${data.customer_id}` : data.message || data.error
+            });
+
+            if (res.ok) {
+                document.getElementById('first_name').value = "";
+                document.getElementById('country').value = "";
+            }
+        }
+
+        // READ BY ID
+        async function getCustomerById() {
+            const id = document.getElementById("search-id").value;
+
+            try {
+                const res = await fetch(`${API}/${id}`);
+                const data = await res.json();
+                console.log(data);
+
+                if (!res.ok) throw new Error("Customer not found");
+
+                document.getElementById("customer-result").innerHTML = `
+                        <tr>
+                            <td>${data.data.customer_id}</td>
+                            <td>
+                                <input id="edit-name" type="text" value="${data.data.first_name}" data-saved="${data.data.first_name}">
+                            </td>
+                            <td>
+                                <input id="edit-country" type="text" value="${data.data.country}" data-saved="${data.data.country}">
+                            </td>
+                            <td>
+                                <button class="action-btn mini-update"
+                                    onclick="updateCustomer('${data.data.customer_id}')">
+                                    Update
+                                </button>
+
+                                <button class="action-btn mini-delete"
+                                    onclick="deleteCustomer('${data.data.customer_id}')">
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+
+                Swal.fire({
+                    toast: true,
+                    position: "top-end",
+                    icon: "success",
+                    title: "Customer Found",
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+
+                document.getElementById("search-id").value = "";
+
+
+            } catch (err) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Not Found",
+                    text: err.message
+                });
+
+                document.getElementById("customer-result").innerHTML = "";
+            }
+        }
+
+        function setSavedState(nameInput, countryInput, name, country) {
+            nameInput.dataset.saved = name;
+            countryInput.dataset.saved = country;
+
+            nameInput.value = name;
+            countryInput.value = country;
+        }
+
+        // UPDATE
+        async function updateCustomer(id) {
+            const nameInput = document.getElementById("edit-name");
+            const countryInput = document.getElementById("edit-country");
+
+            const res = await fetch(`${API}/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    first_name: nameInput.value,
+                    country: countryInput.value
+                })
+            });
+
+            const data = await res.json().catch(() => ({}));
+
+            if (!res.ok) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Update Failed",
+                    text: data.message || "Invalid data"
+                });
+
+                nameInput.value = nameInput.dataset.saved || "";
+                countryInput.value = countryInput.dataset.saved || "";
+                return;
+            }
+
+            Swal.fire({
+                icon: "success",
+                title: "Updated!"
+            });
+
+            nameInput.dataset.saved = nameInput.value;
+            countryInput.dataset.saved = countryInput.value;
+        }
+
+        // DELETE
+        async function deleteCustomer(id) {
+            const confirm = await Swal.fire({
+                title: "Are you sure?",
+                text: "This action cannot be undone",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#e74c3c",
+                cancelButtonColor: "#3498db",
+                confirmButtonText: "Yes, delete"
+            });
+
+            if (!confirm.isConfirmed) return;
+
+            const res = await fetch(`${API}/${id}`, { method: "DELETE" });
+
+            Swal.fire({
+                icon: res.ok ? "success" : "error",
+                title: res.ok ? "Deleted!" : "Delete Failed"
+            });
+
+            loadCustomers();
+        }
+
+    </script>
+
+</body>
+
+</html>

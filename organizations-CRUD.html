@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Organizations Management</title>
+
+    <link rel="stylesheet" href="/node_modules/sweetalert2/dist/sweetalert2.min.css">
+    <script src="/node_modules/sweetalert2/dist/sweetalert2.min.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f5f7fa;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 260px;
+            background: #2c3e50;
+            color: white;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar h2 {
+            margin-bottom: 20px;
+        }
+
+        .nav-links {
+            display: flex;
+            flex-direction: column;
+            margin: 20px 0;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            transition: 0.2s;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .nav-links a:hover {
+            background: #3498db;
+        }
+
+        /* CONTENT */
+        .content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        h1 {
+            margin-top: 0;
+        }
+
+        input {
+            padding: 12px;
+            margin: 10px 0;
+            width: 48%;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 18px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            color: white;
+            margin-top: 10px;
+        }
+
+        .create {
+            background: #27ae60;
+        }
+
+        .search {
+            background: #2980b9;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+        }
+
+        tr:hover {
+            background: #f1f1f1;
+        }
+
+        .action-btn {
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            color: white;
+            border: none;
+        }
+
+        .mini-update {
+            background: #f1c40f;
+        }
+
+        .mini-delete {
+            background: #e74c3c;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <h2>🏢 Organizations</h2>
+        <nav class="nav-links">
+            <a href="/customers-CRUD.html">Customers</a>
+            <a href="/products-CRUD.html">Products</a>
+            <a href="/organizations-CRUD.html">Organizations</a>
+        </nav>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+        <h1>Organizations Management Dashboard</h1>
+
+        <!-- CREATE -->
+        <div class="card">
+            <h2>Add Organization</h2>
+            <div class="row">
+                <input id="name" type="text" placeholder="Organization Name">
+                <input id="industry" type="text" placeholder="Industry">
+            </div>
+            <button class="btn create" onclick="createOrganization()">Create Organization</button>
+        </div>
+
+        <!-- SEARCH -->
+        <div class="card">
+            <h2>Find Organization by ID</h2>
+            <input id="search-id" type="text" placeholder="Organization ID">
+            <button class="btn search" onclick="getOrganizationById()">Search</button>
+
+            <div class="card">
+                <h3>Result</h3>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Industry</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="organization-result"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const API = "http://localhost:3000/organizations";
+
+        // CREATE
+        async function createOrganization() {
+            const name = document.getElementById('name').value;
+            const industry = document.getElementById('industry').value;
+
+            const res = await fetch(API, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, industry })
+            });
+
+            const data = await res.json();
+
+            Swal.fire({
+                icon: res.ok ? "success" : "error",
+                title: res.ok ? "Created!" : "Error",
+                text: res.ok ? `Organization_id: ${data.organization_id}` : data.message || data.error
+            });
+
+            if (res.ok) {
+                document.getElementById('name').value = "";
+                document.getElementById('industry').value = "";
+            }
+        }
+
+        // READ BY ID
+        async function getOrganizationById() {
+            const id = document.getElementById("search-id").value;
+
+            try {
+                const res = await fetch(`${API}/${id}`);
+                const data = await res.json();
+
+                if (!res.ok) throw new Error("Organization not found");
+
+                document.getElementById("organization-result").innerHTML = `
+                    <tr id="empty">
+                        <td>${data.data.organization_id}</td>
+                        <td>
+                            <input id="edit-name" type="text" value="${data.data.name}" data-saved="${data.data.name}">
+                        </td>
+                        <td>
+                            <input id="edit-industry" type="text" value="${data.data.industry}" data-saved="${data.data.industry}">
+                        </td>
+                        <td>
+                            <button class="action-btn mini-update"
+                                onclick="updateOrganization('${data.data.organization_id}')">
+                                Update
+                            </button>
+
+                            <button class="action-btn mini-delete"
+                                onclick="deleteOrganization('${data.data.organization_id}')">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                `;
+
+                Swal.fire({
+                    toast: true,
+                    position: "top-end",
+                    icon: "success",
+                    title: "Organization Found",
+                    showConfirmButton: false,
+                    timer: 3000
+                });
+
+                document.getElementById("search-id").value = "";
+
+            } catch (err) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Not Found",
+                    text: err.message
+                });
+            }
+        }
+
+        // UPDATE
+        async function updateOrganization(id) {
+            const nameInput = document.getElementById("edit-name");
+            const industryInput = document.getElementById("edit-industry");
+
+            const res = await fetch(`${API}/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    name: nameInput.value,
+                    industry: industryInput.value
+                })
+            });
+
+            const data = await res.json().catch(() => ({}));
+
+            if (!res.ok) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Update Failed",
+                    text: data.message || "Invalid data"
+                });
+
+                nameInput.value = nameInput.dataset.saved || "";
+                categoryInput.value = categoryInput.dataset.saved || "";
+                return;
+            }
+
+            Swal.fire({
+                icon: "success",
+                title: "Updated!"
+            });
+
+            nameInput.dataset.saved = nameInput.value;
+            categoryInput.dataset.saved = categoryInput.value;
+
+            if (!res.ok) {
+                nameInput.value = nameInput.dataset.saved;
+                categoryInput.value = categoryInput.dataset.saved;
+            }
+        }
+
+        // DELETE
+        async function deleteOrganization(id) {
+            const confirm = await Swal.fire({
+                title: "Are you sure?",
+                text: "This action cannot be undone",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#e74c3c",
+                cancelButtonColor: "#3498db",
+                confirmButtonText: "Yes, delete"
+            });
+
+            if (!confirm.isConfirmed) return;
+
+            const res = await fetch(`${API}/${id}`, { method: "DELETE" });
+
+            Swal.fire({
+                icon: res.ok ? "success" : "error",
+                title: res.ok ? "Deleted!" : "Delete Failed"
+            });
+
+            if(res.ok){
+                document.getElementById("empty").innerHTML = "";
+            }
+        }
+    </script>
+
+</body>
+
+</html>

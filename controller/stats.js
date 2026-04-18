@@ -3,9 +3,9 @@ const { client } = require('../connexion/connexion');
 async function getAggregations(req, res) {
     try {
         const [customers, products, organizations] = await Promise.all([
-            client.execute("SELECT key, value FROM kpi_stats WHERE kpi_type='customers_by_country' LIMIT 20"),
-            client.execute("SELECT key, value FROM kpi_stats WHERE kpi_type='products_by_category' LIMIT 20"),
-            client.execute("SELECT key, value FROM kpi_stats WHERE kpi_type='organizations_by_industry' LIMIT 20")
+            client.execute("SELECT key, value FROM kpi_stats WHERE kpi_type='customers_by_country' LIMIT 10"),
+            client.execute("SELECT key, value FROM kpi_stats WHERE kpi_type='products_by_category' LIMIT 10"),
+            client.execute("SELECT key, value FROM kpi_stats WHERE kpi_type='organizations_by_industry' LIMIT 10")
         ]);
 
         const customers_by_country = customers.rows.map(r => ({

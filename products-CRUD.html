@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Products Management</title>
+
+    <link rel="stylesheet" href="/node_modules/sweetalert2/dist/sweetalert2.min.css">
+    <script src="/node_modules/sweetalert2/dist/sweetalert2.min.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f5f7fa;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: #2c3e50;
+            color: white;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar h2 {
+            margin-bottom: 20px;
+        }
+
+        .nav-links {
+            display: flex;
+            flex-direction: column;
+            margin: 20px 0;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            transition: 0.2s;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .nav-links a:hover {
+            background: #3498db;
+        }
+
+        .content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        h1 {
+            margin-top: 0;
+        }
+
+        input {
+            padding: 12px;
+            margin: 10px 0;
+            width: 48%;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 18px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            color: white;
+            margin-top: 10px;
+        }
+
+        .create {
+            background: #27ae60;
+        }
+
+        .search {
+            background: #2980b9;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+        }
+
+        tr:hover {
+            background: #f1f1f1;
+        }
+
+        .action-btn {
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            color: white;
+            border: none;
+        }
+
+        .mini-update {
+            background: #f1c40f;
+        }
+
+        .mini-delete {
+            background: #e74c3c;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <h2>📦 Products</h2>
+        <nav class="nav-links">
+            <a href="/customers-CRUD.html">Customers</a>
+            <a href="/products-CRUD.html">Products</a>
+            <a href="/organizations-CRUD.html">Organizations</a>
+        </nav>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+        <h1>Products Management Dashboard</h1>
+
+        <!-- CREATE -->
+        <div class="card">
+            <h2>Add Product</h2>
+            <div class="row">
+                <input id="name" type="text" placeholder="Product Name">
+                <input id="category" type="text" placeholder="Category">
+            </div>
+            <button class="btn create" onclick="createProduct()">Create Product</button>
+        </div>
+
+        <!-- SEARCH -->
+        <div class="card">
+            <h2>Find Product by ID</h2>
+            <input id="search-id" type="text" placeholder="Product ID">
+            <button class="btn search" onclick="getProductById()">Search</button>
+
+            <div class="card">
+                <h3>Result</h3>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="product-result"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const API = "http://localhost:3000/products";
+
+        // CREATE
+        async function createProduct() {
+            const name = document.getElementById('name').value;
+            const category = document.getElementById('category').value;
+
+            const res = await fetch(API, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, category })
+            });
+
+            const data = await res.json();
+
+            Swal.fire({
+                icon: res.ok ? "success" : "error",
+                title: res.ok ? "Created!" : "Error",
+                text: res.ok ? `Product_id: ${data.product_id}` : data.message || data.error
+            });
+
+            if (res.ok) {
+                document.getElementById('name').value = "";
+                document.getElementById('category').value = "";
+            }
+        }
+
+        // READ BY ID
+        async function getProductById() {
+            const id = document.getElementById("search-id").value;
+
+            try {
+                const res = await fetch(`${API}/${id}`);
+                const data = await res.json();
+
+                if (!res.ok) throw new Error("Product not found");
+
+                document.getElementById("product-result").innerHTML = `
+                    <tr>
+                        <td>${data.data.product_id}</td>
+                        <td>
+                            <input id="edit-name" type="text" value="${data.data.name}" data-saved="${data.data.name}">
+                        </td>
+                        <td>
+                            <input id="edit-category" type="text" value="${data.data.category}" data-saved="${data.data.category}">
+                        </td>
+                        <td>
+                            <button class="action-btn mini-update"
+                                onclick="updateProduct('${data.data.product_id}')">
+                                Update
+                            </button>
+
+                            <button class="action-btn mini-delete"
+                                onclick="deleteProduct('${data.data.product_id}')">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                `;
+
+                Swal.fire({
+                    toast: true,
+                    position: "top-end",
+                    icon: "success",
+                    title: "Product Found",
+                    showConfirmButton: false,
+                    timer: 3000
+                });
+
+                document.getElementById("search-id").value = "";
+
+            } catch (err) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Not Found",
+                    text: err.message
+                });
+
+                document.getElementById("product-result").innerHTML = "";
+            }
+        }
+
+        // UPDATE
+        async function updateProduct(id) {
+            const nameInput = document.getElementById("edit-name");
+            const categoryInput = document.getElementById("edit-category");
+
+            const res = await fetch(`${API}/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    name: nameInput.value,
+                    category: categoryInput.value
+                })
+            });
+
+            const data = await res.json().catch(() => ({}));
+
+            if (!res.ok) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Update Failed",
+                    text: data.message || "Invalid data"
+                });
+
+                nameInput.value = nameInput.dataset.saved || "";
+                categoryInput.value = categoryInput.dataset.saved || "";
+                return;
+            }
+
+            Swal.fire({
+                icon: "success",
+                title: "Updated!"
+            });
+
+            nameInput.dataset.saved = nameInput.value;
+            categoryInput.dataset.saved = categoryInput.value;
+        }
+
+        // DELETE
+        async function deleteProduct(id) {
+            const confirm = await Swal.fire({
+                title: "Are you sure?",
+                text: "This action cannot be undone",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#e74c3c",
+                cancelButtonColor: "#3498db",
+                confirmButtonText: "Yes, delete"
+            });
+
+            if (!confirm.isConfirmed) return;
+
+            const res = await fetch(`${API}/${id}`, { method: "DELETE" });
+
+            Swal.fire({
+                icon: res.ok ? "success" : "error",
+                title: res.ok ? "Deleted!" : "Delete Failed"
+            });
+        }
+    </script>
+
+</body>
+
+</html>

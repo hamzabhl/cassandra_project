@@ -14,6 +14,12 @@ connectDB();
 // Routes
 app.use('/totals', require('./routes/totals_route'));
 app.use('/stats', require('./routes/stats_route'));
+app.use('/highest', require('./routes/highest_stats_route'));
+
+// CRUD Routes
+app.use('/customers', require('./routes/customer_crud_route'));
+app.use('/products', require('./routes/product_crud_route'));
+app.use('/organizations', require('./routes/organization_crud_route'));
 
 app.listen(3000, () => {
     console.log('Server running on port 3000');
