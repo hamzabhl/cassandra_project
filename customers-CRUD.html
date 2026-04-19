@@ -159,6 +159,27 @@
         .nav-links a:hover {
             background: #3498db;
         }
+
+        .container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .container .card {
+            width: 300px;
+        }
+
+        .card h2 {
+            font-size: 18px;
+            color: #666;
+        }
+
+        .card p {
+            font-size: 26px;
+            font-weight: bold;
+        }
     </style>
 </head>
 
@@ -166,8 +187,9 @@
 
     <!-- SIDEBAR -->
     <div class="sidebar">
-        <h2>📋 Customers</h2>
+        <h2>Customers CRUD</h2>
         <nav class="nav-links">
+            <a href="/dashboard.html">Home</a>
             <a href="/customers-CRUD.html">Customers</a>
             <a href="/products-CRUD.html">Products</a>
             <a href="/organizations-CRUD.html">Organizations</a>
@@ -177,7 +199,7 @@
     <!-- MAIN CONTENT -->
     <div class="content">
 
-        <h1>Customer Management Dashboard</h1>
+        <h1>Customer Management</h1>
 
         <!-- CREATE -->
         <div class="card">
@@ -211,6 +233,18 @@
             </div>
         </div>
 
+        <!-- Stats -->
+        <div class="container">
+            <div class="card">
+                <h2>Customers</h2>
+                <p id="customers">--</p>
+            </div>
+
+            <div class="card">
+                <h2>Top Country</h2>
+                <p id="top-country">--</p>
+            </div>
+        </div>
     </div>
 
     <!-- SCRIPT -->
@@ -240,6 +274,7 @@
                 document.getElementById('first_name').value = "";
                 document.getElementById('country').value = "";
             }
+            loadDashboard();
         }
 
         // READ BY ID
@@ -287,8 +322,7 @@
                 });
 
                 document.getElementById("search-id").value = "";
-
-
+                loadDashboard();
             } catch (err) {
                 Swal.fire({
                     icon: "error",
@@ -298,14 +332,6 @@
 
                 document.getElementById("customer-result").innerHTML = "";
             }
-        }
-
-        function setSavedState(nameInput, countryInput, name, country) {
-            nameInput.dataset.saved = name;
-            countryInput.dataset.saved = country;
-
-            nameInput.value = name;
-            countryInput.value = country;
         }
 
         // UPDATE
@@ -343,6 +369,7 @@
 
             nameInput.dataset.saved = nameInput.value;
             countryInput.dataset.saved = countryInput.value;
+            loadDashboard();
         }
 
         // DELETE
@@ -365,10 +392,35 @@
                 icon: res.ok ? "success" : "error",
                 title: res.ok ? "Deleted!" : "Delete Failed"
             });
-
-            loadCustomers();
+            document.getElementById("customer-result").innerHTML = "";
+            loadDashboard();
         }
 
+        // Stats
+        async function loadDashboard() {
+            try {
+                const [totalsRes, topRes] = await Promise.all([
+                    fetch('http://localhost:3000/totals'),
+                    fetch('http://localhost:3000/highest')
+                ]);
+
+                const totals = await totalsRes.json();
+                const top = await topRes.json();
+                console.log(totals);
+
+                // TOP KPIs
+                document.getElementById('top-country').innerText =
+                    `${top.data.top_country.key} (${top.data.top_country.value} Customers)`;
+
+                // TOTALS
+                document.getElementById('customers').innerText = totals.total_customers;
+
+            } catch (err) {
+                console.error('Error loading dashboard:', err);
+            }
+        }
+
+        loadDashboard();
     </script>
 
 </body>

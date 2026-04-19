@@ -134,6 +134,27 @@
         .mini-delete {
             background: #e74c3c;
         }
+
+        .container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .container .card {
+            width: 300px;
+        }
+
+        .card h2 {
+            font-size: 18px;
+            color: #666;
+        }
+
+        .card p {
+            font-size: 26px;
+            font-weight: bold;
+        }
     </style>
 </head>
 
@@ -141,8 +162,9 @@
 
     <!-- SIDEBAR -->
     <div class="sidebar">
-        <h2>🏢 Organizations</h2>
+        <h2>Organizations CRUD</h2>
         <nav class="nav-links">
+            <a href="/dashboard.html">Home</a>
             <a href="/customers-CRUD.html">Customers</a>
             <a href="/products-CRUD.html">Products</a>
             <a href="/organizations-CRUD.html">Organizations</a>
@@ -152,7 +174,7 @@
     <!-- CONTENT -->
     <div class="content">
 
-        <h1>Organizations Management Dashboard</h1>
+        <h1>Organizations Management</h1>
 
         <!-- CREATE -->
         <div class="card">
@@ -187,6 +209,19 @@
             </div>
         </div>
 
+        <!-- Stats -->
+        <div class="container">
+            <div class="card">
+                <h2>Organizations</h2>
+                <p id="organizations">--</p>
+            </div>
+
+            <div class="card">
+                <h2>Top Industry</h2>
+                <p id="top-industry">--</p>
+            </div>
+        </div>
+
     </div>
 
     <script>
@@ -215,6 +250,7 @@
                 document.getElementById('name').value = "";
                 document.getElementById('industry').value = "";
             }
+            loadDashboard();
         }
 
         // READ BY ID
@@ -260,7 +296,7 @@
                 });
 
                 document.getElementById("search-id").value = "";
-
+                loadDashboard();
             } catch (err) {
                 Swal.fire({
                     icon: "error",
@@ -294,7 +330,7 @@
                 });
 
                 nameInput.value = nameInput.dataset.saved || "";
-                categoryInput.value = categoryInput.dataset.saved || "";
+                industryInput.value = industryInput.dataset.saved || "";
                 return;
             }
 
@@ -304,12 +340,13 @@
             });
 
             nameInput.dataset.saved = nameInput.value;
-            categoryInput.dataset.saved = categoryInput.value;
+            industryInput.dataset.saved = industryInput.value;
 
             if (!res.ok) {
                 nameInput.value = nameInput.dataset.saved;
-                categoryInput.value = categoryInput.dataset.saved;
+                industryInput.value = industryInput.dataset.saved;
             }
+            loadDashboard();
         }
 
         // DELETE
@@ -333,10 +370,38 @@
                 title: res.ok ? "Deleted!" : "Delete Failed"
             });
 
-            if(res.ok){
+            if (res.ok) {
                 document.getElementById("empty").innerHTML = "";
             }
+            document.getElementById("organization-result").innerHTML = "";
+            loadDashboard();
         }
+
+        // Stats
+        async function loadDashboard() {
+            try {
+                const [totalsRes, topRes] = await Promise.all([
+                    fetch('http://localhost:3000/totals'),
+                    fetch('http://localhost:3000/highest')
+                ]);
+
+                const totals = await totalsRes.json();
+                const top = await topRes.json();
+                console.log(totals);
+
+                // TOP KPIs
+                document.getElementById('top-industry').innerText =
+                    `${top.data.top_industry.key} (${top.data.top_industry.value} Organizations)`;
+
+                // TOTALS
+                document.getElementById('organizations').innerText = totals.total_organizations;
+
+            } catch (err) {
+                console.error('Error loading dashboard:', err);
+            }
+        }
+
+        loadDashboard();
     </script>
 
 </body>

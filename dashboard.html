@@ -10,10 +10,53 @@
 
     <style>
         body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: linear-gradient(135deg, #eef2f7, #dfe9f3);
             margin: 0;
-            padding: 20px;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f5f7fa;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 260px;
+            background: #2c3e50;
+            color: white;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar h2 {
+            margin-bottom: 20px;
+        }
+
+        .nav-links {
+            display: flex;
+            flex-direction: column;
+            margin: 20px 0;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            transition: 0.2s;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .nav-links a:hover {
+            background: #3498db;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 20px 40px;
+            overflow-y: auto;
+
         }
 
         h1 {
@@ -54,9 +97,17 @@
             font-weight: bold;
         }
 
-        #top-country { color: #3498db; }
-        #top-category { color: #27ae60; }
-        #top-industry { color: #e67e22; }
+        #top-country {
+            color: #3498db;
+        }
+
+        #top-category {
+            color: #27ae60;
+        }
+
+        #top-industry {
+            color: #e67e22;
+        }
 
         canvas {
             margin-top: 50px;
@@ -107,91 +158,128 @@
                 opacity: 0;
                 transform: translateY(10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
+        }
+
+        td:nth-child(2),
+        th:nth-child(2) {
+            text-align: center;
+        }
+
+        td:nth-child(1),
+        th:nth-child(1) {
+            text-align: left;
         }
     </style>
 </head>
 
 <body>
 
-    <h1>KPI Dashboard</h1>
+    <body>
 
-    <!-- TOP KPIs -->
-    <div class="container">
-        <div class="card">
-            <h2>🌍 Top Country</h2>
-            <p id="top-country">Loading...</p>
+
+        <div class="sidebar">
+            <h2>Statistics</h2>
+            <nav class="nav-links">
+                <a href="/dashboard.html">Home</a>
+                <a href="/customers-CRUD.html">Customers</a>
+                <a href="/products-CRUD.html">Products</a>
+                <a href="/organizations-CRUD.html">Organizations</a>
+            </nav>
         </div>
 
-        <div class="card">
-            <h2>📦 Top Category</h2>
-            <p id="top-category">Loading...</p>
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+
+            <h1>KPI Dashboard</h1>
+
+            <!-- TOTALS -->
+            <div class="container">
+                <div class="card">
+                    <h2>Customers</h2>
+                    <p id="customers">--</p>
+                </div>
+
+                <div class="card">
+                    <h2>Organizations</h2>
+                    <p id="organizations">--</p>
+                </div>
+
+                <div class="card">
+                    <h2>Products</h2>
+                    <p id="products">--</p>
+                </div>
+            </div>
+
+            <!-- TOP KPIs -->
+            <div class="container" style="margin-top:30px;">
+                <div class="card">
+                    <h2>Top Country</h2>
+                    <p id="top-country">--</p>
+                </div>
+
+                <div class="card">
+                    <h2>Top Category</h2>
+                    <p id="top-category">--</p>
+                </div>
+
+                <div class="card">
+                    <h2>Top Industry</h2>
+                    <p id="top-industry">--</p>
+                </div>
+            </div>
+
+            <!-- CHART -->
+            <canvas id="kpiChart"></canvas>
+
+            <!-- TABLES -->
+            <div class="tables-container">
+
+                <div class="table-card">
+                    <h2>Customers by Country</h2>
+                    <table id="customersByCountry">
+                        <thead>
+                            <tr>
+                                <th>Country</th>
+                                <th>Customers Number</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <div class="table-card">
+                    <h2>Products by Category</h2>
+                    <table id="productsByCategory">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Products Number</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <div class="table-card">
+                    <h2>Organizations by Industry</h2>
+                    <table id="organizationsByIndustry">
+                        <thead>
+                            <tr>
+                                <th>Industry</th>
+                                <th>Organizations Number</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-
-        <div class="card">
-            <h2>🏢 Top Industry</h2>
-            <p id="top-industry">Loading...</p>
-        </div>
-    </div>
-
-    <!-- TOTALS -->
-    <div class="container" style="margin-top:30px;">
-        <div class="card">
-            <h2>Customers</h2>
-            <p id="customers">--</p>
-        </div>
-
-        <div class="card">
-            <h2>Organizations</h2>
-            <p id="organizations">--</p>
-        </div>
-
-        <div class="card">
-            <h2>Products</h2>
-            <p id="products">--</p>
-        </div>
-    </div>
-
-    <!-- CHART -->
-    <canvas id="kpiChart"></canvas>
-
-    <!-- TABLES -->
-    <div class="tables-container">
-
-        <div class="table-card">
-            <h2>Customers by Country</h2>
-            <table id="customersByCountry">
-                <thead>
-                    <tr><th>Country</th><th>Total</th></tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
-
-        <div class="table-card">
-            <h2>Products by Category</h2>
-            <table id="productsByCategory">
-                <thead>
-                    <tr><th>Category</th><th>Total</th></tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
-
-        <div class="table-card">
-            <h2>Organizations by Industry</h2>
-            <table id="organizationsByIndustry">
-                <thead>
-                    <tr><th>Industry</th><th>Total</th></tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
-
-    </div>
+    </body>
 
     <script>
         async function loadDashboard() {
@@ -279,4 +367,5 @@
     </script>
 
 </body>
+
 </html>
